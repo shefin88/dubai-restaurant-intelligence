@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Dubai Restaurant Intelligence</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: Arial, sans-serif; 
+      background: linear-gradient(135deg, #fffdf7 0%, #fff7ed 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .header { 
+      background: linear-gradient(135deg, #fff, #fff7ed); 
+      border-bottom: 3px solid #fde68a; 
+      padding: 20px; 
+      margin-bottom: 20px; 
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .header h1 { color: #f59e0b; margin: 0; font-size: 28px; }
+    .badge { background: #16a34a; color: white; padding: 4px 12px; border-radius: 6px; font-size: 12px; margin-left: 10px; }
+    
+    .controls { max-width: 1200px; margin: 0 auto 20px; display: flex; gap: 15px; align-items: center; }
+    select { flex: 1; max-width: 400px; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; background: white; }
+    button { background: #f59e0b; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; }
+    button:hover { background: #fbbf24; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    .grid { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; }
+    .card { background: white; border: 2px solid #e5e7eb; border-radius: 10px; padding: 18px; cursor: pointer; transition: all 0.3s; }
+    .card:hover { box-shadow: 0 6px 20px rgba(245, 158, 11, 0.15); transform: translateY(-3px); border-color: #f59e0b; }
+    .name { font-size: 20px; font-weight: bold; margin-bottom: 12px; color: #1f2937; }
+    .loc { background: #fff7ed; border-left: 4px solid #f59e0b; padding: 10px; margin: 10px 0; border-radius: 6px; font-size: 13px; color: #4b5563; line-height: 1.6; }
+    .cuisine { font-size: 14px; color: #4b5563; margin-top: 10px; font-weight: 500; }
+    .hint { margin-top: 10px; font-size: 12px; color: #9ca3af; }
+    
+    .detail { max-width: 900px; margin: 0 auto; display: none; }
+    .detail.active { display: block; }
+    .back-btn { display: inline-block; margin-bottom: 15px; cursor: pointer; color: #f59e0b; font-weight: bold; font-size: 16px; }
+    .back-btn:hover { color: #fbbf24; text-decoration: underline; }
+    .detail-header { background: white; border-radius: 12px; padding: 25px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+    .detail-title { font-size: 32px; font-weight: bold; margin-bottom: 20px; color: #1f2937; }
+    .detail-loc { background: #fff7ed; border-left: 4px solid #f59e0b; padding: 12px; margin-bottom: 15px; border-radius: 6px; }
+    .detail-loc div { margin: 5px 0; font-size: 14px; color: #4b5563; }
+    .detail-loc strong { color: #1f2937; }
+    .cuisine-tag { display: inline-block; background: #fef3c7; padding: 6px 16px; border-radius: 20px; font-weight: bold; margin-top: 10px; color: #92400e; }
+    
+    .section-box { background: white; border-radius: 12px; padding: 25px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+    .section-title { font-size: 20px; font-weight: bold; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 3px solid #fff7ed; color: #1f2937; }
+    .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+    .menu-item { background: linear-gradient(135deg, #fffbeb, #fff); border: 2px solid #fde68a; padding: 10px; border-radius: 8px; text-align: center; font-size: 14px; font-weight: 500; color: #92400e; }
+    .ing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+    .ing-item { background: linear-gradient(135deg, #fef3c7, #fff); border: 2px solid #fcd34d; padding: 8px 12px; border-radius: 20px; text-align: center; font-size: 13px; font-weight: 600; color: #92400e; }
+    
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+    .info-item { padding: 10px; background: #f9fafb; border-radius: 6px; font-size: 14px; }
+    .info-item strong { color: #1f2937; display: block; margin-bottom: 4px; }
+    
+    .loading { text-align: center; padding: 50px; color: #4b5563; background: white; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+    .loading strong { display: block; font-size: 18px; margin-bottom: 10px; color: #f59e0b; }
+    
+    @media (max-width: 768px) { 
+      .controls { flex-direction: column; align-items: stretch; }
+      select { max-width: 100%; width: 100%; }
+      .grid { grid-template-columns: 1fr; }
+      .menu-grid, .ing-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🗺️ Dubai Restaurant Intelligence <span class="badge">DEMO</span></h1>
+  </div>
+  
+  <div class="controls">
+    <select id="areaSelect">
+      <option value="">Select Dubai Area...</option>
+      <option value="Deira">Deira</option>
+      <option value="Bur Dubai">Bur Dubai</option>
+      <option value="Dubai Marina">Dubai Marina</option>
+      <option value="JLT">JLT</option>
+      <option value="Downtown Dubai">Downtown Dubai</option>
+      <option value="Business Bay">Business Bay</option>
+      <option value="DIFC">DIFC</option>
+      <option value="Jumeirah 1">Jumeirah 1</option>
+      <option value="Palm Jumeirah">Palm Jumeirah</option>
+      <option value="Al Barsha">Al Barsha</option>
+      <option value="Al Qusais">Al Qusais</option>
+      <option value="Al Nahda">Al Nahda</option>
+      <option value="Mirdif">Mirdif</option>
+      <option value="International City">International City</option>
+    </select>
+    <button id="fetchBtn">Fetch Restaurants</button>
+  </div>
+  
+  <div id="loading" class="loading" style="display:none">
+    <strong>⏳ Fetching Premium Restaurants...</strong>
+    <div>This may take 30-60 seconds</div>
+  </div>
+  
+  <div id="grid" class="grid"></div>
+  
+  <div id="detail" class="detail">
+    <div class="back-btn" onclick="showList()">← Back to Results</div>
+    <div class="detail-header">
+      <div id="d-name" class="detail-title"></div>
+      <div class="detail-loc">
+        <div><strong>📍 Area:</strong> <span id="d-area"></span></div>
+        <div><strong>📍 Sub-Area:</strong> <span id="d-sub"></span></div>
+        <div><strong>📍 Street:</strong> <span id="d-street"></span></div>
+      </div>
+      <div id="d-cuisine" class="cuisine-tag"></div>
+    </div>
+    
+    <div class="section-box">
+      <div class="section-title">📜 Premium Menu Items</div>
+      <div id="d-menu" class="menu-grid"></div>
+    </div>
+    
+    <div class="section-box">
+      <div class="section-title">🌿 Ingredients & Spices</div>
+      <div id="d-ing" class="ing-grid"></div>
+    </div>
+    
+    <div class="section-box">
+      <div class="section-title">ℹ️ Contact Information</div>
+      <div class="info-grid">
+        <div class="info-item"><strong>📞 Phone</strong><span id="d-phone"></span></div>
+        <div class="info-item"><strong>🕐 Hours</strong><span id="d-hours"></span></div>
+        <div class="info-item"><strong>🌐 Website</strong><span id="d-web"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let restaurants = [];
+    const areaSelect = document.getElementById('areaSelect');
+    const fetchBtn = document.getElementById('fetchBtn');
+    const loading = document.getElementById('loading');
+    const grid = document.getElementById('grid');
+    const detail = document.getElementById('detail');
+    
+    fetchBtn.onclick = async () => {
+      const area = areaSelect.value;
+      if (!area) { alert('Please select an area'); return; }
+      
+      loading.style.display = 'block';
+      grid.innerHTML = '';
+      detail.classList.remove('active');
+      fetchBtn.disabled = true;
+      
+      try {
+        const res = await fetch('http://localhost:3001/api/restaurants?area=' + area);
+        const data = await res.json();
+        
+        if (!res.ok || data.error) throw new Error(data.error);
+        if (!data.restaurants.length) { alert('No restaurants found in this area'); return; }
+        
+        restaurants = data.restaurants;
+        renderGrid();
+      } catch (err) {
+        alert('Error: ' + err.message);
+      } finally {
+        loading.style.display = 'none';
+        fetchBtn.disabled = false;
+      }
+    };
+    
+    function renderGrid() {
+      grid.innerHTML = '';
+      restaurants.forEach((r, idx) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.onclick = () => showDetail(idx);
+        card.innerHTML = `
+          <div class="name">${r.name}</div>
+          <div class="loc">
+            <div><strong>📍 Area:</strong> ${r.mainArea}</div>
+            <div><strong>📍 Sub:</strong> ${r.subArea}</div>
+            <div><strong>📍 Street:</strong> ${r.street}</div>
+          </div>
+          <div class="cuisine"><strong>🍽️ Cuisine:</strong> ${r.cuisine}</div>
+          <div class="hint">Click to view premium menu & ingredients →</div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+    
+    function showDetail(idx) {
+      const r = restaurants[idx];
+      document.getElementById('d-name').textContent = r.name;
+      document.getElementById('d-area').textContent = r.mainArea;
+      document.getElementById('d-sub').textContent = r.subArea;
+      document.getElementById('d-street').textContent = r.street;
+      document.getElementById('d-cuisine').textContent = r.cuisine;
+      document.getElementById('d-phone').textContent = r.phone;
+      document.getElementById('d-hours').textContent = r.hours;
+      document.getElementById('d-web').textContent = r.website;
+      
+      document.getElementById('d-menu').innerHTML = r.menu.map(m => `<div class="menu-item">${m}</div>`).join('');
+      document.getElementById('d-ing').innerHTML = r.ingredients.map(i => `<div class="ing-item">${i}</div>`).join('');
+      
+      grid.style.display = 'none';
+      detail.classList.add('active');
+      window.scrollTo(0, 0);
+    }
+    
+    function showList() {
+      detail.classList.remove('active');
+      grid.style.display = 'grid';
+      window.scrollTo(0, 0);
+    }
+  </script>
+</body>
+</html>
