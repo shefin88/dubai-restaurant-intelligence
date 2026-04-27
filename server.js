@@ -8,7 +8,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ Dubai Areas
+// ✅ Dubai Areas Configuration
 const AREAS = {
   'Deira': { lat: 25.2697, lon: 55.3293, radius: 3000 },
   'Bur Dubai': { lat: 25.2632, lon: 55.2972, radius: 3000 },
@@ -31,6 +31,7 @@ const CUISINE_DB = {
   'default': { menu:['Grilled Chicken','Fresh Salad','Rice','Soup'], ingredients:['chicken','vegetables','rice','oil','salt'] }
 };
 
+// ✅ Get Menu Function (with fallback)
 async function getMenu(name, cuisine) {
   try {
     const d = await axios.get(`https://www.google.com/search?q=${encodeURIComponent(name+' menu')}&hl=en`, {
@@ -52,6 +53,7 @@ async function getMenu(name, cuisine) {
   return CUISINE_DB[k];
 }
 
+// ✅ API Endpoint: Fetch Restaurants
 app.get('/api/restaurants', async(req,res)=>{
   const area=req.query.area; 
   if(!area||!AREAS[area]) return res.status(400).json({error:'Invalid area'});
@@ -88,16 +90,22 @@ app.get('/api/restaurants', async(req,res)=>{
   }
 });
 
-// ✅ Serve static files from 'public' folder
-app.use(express.static('public'));
+// ✅ Serve static files from 'public' folder (FRONTEND)
+app.use(express.static(path.join(__dirname, 'public')));
 
-// ✅ Serve index.html for all other routes (frontend)
+// ✅ Catch-all route: Serve index.html for any other route (SPA support)
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ✅ Start server
+// ✅ Export for Vercel serverless + Start server for local
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+
+// Vercel uses module.exports, local uses app.listen
+if (process.env.NODE_ENV === 'production' && process.env.VERCEL) {
+  module.exports = app;
+} else {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
