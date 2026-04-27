@@ -93,15 +93,14 @@ app.get('/api/restaurants', async(req,res)=>{
 // ✅ Serve static files from 'public' folder (FRONTEND)
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ✅ Catch-all route: Serve index.html for any other route (SPA support)
-app.get('*', (req, res) => {
+// ✅ Serve index.html ONLY for root path (no wildcard!)
+app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // ✅ Export for Vercel serverless + Start server for local
 const PORT = process.env.PORT || 3001;
 
-// Vercel uses module.exports, local uses app.listen
 if (process.env.NODE_ENV === 'production' && process.env.VERCEL) {
   module.exports = app;
 } else {
